@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-
 import 'custom_button.dart';
+import 'group_check_box.dart';
 import 'models/user.dart';
 import 'models/product.dart';
 
@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Integrated App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -24,6 +24,7 @@ class MyApp extends StatelessWidget {
         '/second': (context) => SecondPage(),
         '/users': (context) => UserListPage(),
         '/products': (context) => ProductListPage(),
+        '/checkbox-demo': (context) => TriStateCheckBoxDemo(),
       },
     );
   }
@@ -34,41 +35,38 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home Page'),
+        title: Text('Integrated App Home'),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ElevatedButton(
+            CustomButton(
+              label: 'Go to Second Page',
               onPressed: () {
                 Navigator.pushNamed(context, '/second');
               },
-              child: Text('Next'),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/users');
-              },
-              child: Text('Users'),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/products');
-              },
-              child: Text('Products'),
             ),
             SizedBox(height: 20),
             CustomButton(
-              label: 'Another Button',
+              label: 'View Users',
               onPressed: () {
-                print('Another Button Pressed!');
+                Navigator.pushNamed(context, '/users');
               },
-              backgroundColor: Colors.red,
-              textColor: Colors.white,
-              borderRadius: 16.0,
+            ),
+            SizedBox(height: 20),
+            CustomButton(
+              label: 'View Products',
+              onPressed: () {
+                Navigator.pushNamed(context, '/products');
+              },
+            ),
+            SizedBox(height: 20),
+            CustomButton(
+              label: 'Checkbox Demo',
+              onPressed: () {
+                Navigator.pushNamed(context, '/checkbox-demo');
+              },
             ),
           ],
         ),
@@ -209,6 +207,23 @@ class _ProductListPageState extends State<ProductListPage> {
             return Center(child: Text('No data available'));
           }
         },
+      ),
+    );
+  }
+}
+
+class TriStateCheckBoxDemo extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('TriState CheckBox Example'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: GroupCheckBox(
+          initialChildStates: [false, false, false],
+        ),
       ),
     );
   }

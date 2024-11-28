@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import 'custom_button.dart';
 import 'models/user.dart';
 import 'models/product.dart';
 
@@ -58,6 +59,16 @@ class MyHomePage extends StatelessWidget {
                 Navigator.pushNamed(context, '/products');
               },
               child: Text('Products'),
+            ),
+            SizedBox(height: 20), // Відступ між кнопками
+            CustomButton(
+              label: 'Another Button',
+              onPressed: () {
+                print('Another Button Pressed!');
+              },
+              backgroundColor: Colors.red,
+              textColor: Colors.white,
+              borderRadius: 16.0,
             ),
           ],
         ),

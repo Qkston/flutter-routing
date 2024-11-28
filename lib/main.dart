@@ -46,21 +46,21 @@ class MyHomePage extends StatelessWidget {
               },
               child: Text('Next'),
             ),
-            SizedBox(height: 20), // Відступ
+            SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
                 Navigator.pushNamed(context, '/users');
               },
               child: Text('Users'),
             ),
-            SizedBox(height: 20), // Відступ
+            SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
                 Navigator.pushNamed(context, '/products');
               },
               child: Text('Products'),
             ),
-            SizedBox(height: 20), // Відступ між кнопками
+            SizedBox(height: 20),
             CustomButton(
               label: 'Another Button',
               onPressed: () {

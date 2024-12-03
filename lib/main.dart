@@ -21,8 +21,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => MyHomePage(),
         '/second': (context) => SecondPage(),
-        '/users': (context) => UserListPage(),
-        '/products': (context) => ProductListPage(),
+        '/combined-list': (context) => CombinedListPage(),
       },
     );
   }
@@ -45,19 +44,12 @@ class MyHomePage extends StatelessWidget {
               },
               child: Text('Next'),
             ),
-            SizedBox(height: 20), // Відступ
+            SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                Navigator.pushNamed(context, '/users');
+                Navigator.pushNamed(context, '/combined-list');
               },
-              child: Text('Users'),
-            ),
-            SizedBox(height: 20), // Відступ
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/products');
-              },
-              child: Text('Products'),
+              child: Text('View Combined List'),
             ),
           ],
         ),
@@ -85,28 +77,56 @@ class SecondPage extends StatelessWidget {
   }
 }
 
-class UserListPage extends StatefulWidget {
+class CombinedListPage extends StatefulWidget {
   @override
-  _UserListPageState createState() => _UserListPageState();
+  _CombinedListPageState createState() => _CombinedListPageState();
 }
 
-class _UserListPageState extends State<UserListPage> {
-  late Future<List<User>> _futureUsers;
+class _CombinedListPageState extends State<CombinedListPage> {
+  late Future<Map<User, List<Product>>> _futureUserProductMap;
 
   @override
   void initState() {
     super.initState();
-    _futureUsers = fetchUsers();
+    _futureUserProductMap = fetchUserProductMap();
   }
 
-  Future<List<User>> fetchUsers() async {
-    final response = await http.get(Uri.parse('https://jsonplaceholder.typicode.com/users'));
+  Future<Map<User, List<Product>>> fetchUserProductMap() async {
+    try {
+      final userResponse = await http
+          .get(Uri.parse('https://jsonplaceholder.typicode.com/users'));
+      final productResponse =
+          await http.get(Uri.parse('https://fakestoreapi.com/products'));
 
-    if (response.statusCode == 200) {
-      final List<dynamic> jsonData = json.decode(response.body);
-      return jsonData.map((json) => User.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load users');
+      if (userResponse.statusCode == 200 && productResponse.statusCode == 200) {
+        final List<User> users = (json.decode(userResponse.body) as List)
+            .map((json) => User.fromJson(json))
+            .toList();
+        final List<Product> products =
+            (json.decode(productResponse.body) as List)
+                .map((json) => Product.fromJson(json))
+                .toList();
+
+        // Прив'язуємо продукти до користувачів
+        final Map<User, List<Product>> userProductMap = {};
+        int productIndex = 0;
+
+        for (final user in users) {
+          userProductMap[user] = [];
+          for (int i = 0; i < 2; i++) {
+            if (productIndex < products.length) {
+              userProductMap[user]!.add(products[productIndex]);
+              productIndex++;
+            }
+          }
+        }
+
+        return userProductMap;
+      } else {
+        throw Exception('Failed to load data');
+      }
+    } catch (e) {
+      throw Exception('Failed to load data: $e');
     }
   }
 
@@ -114,85 +134,35 @@ class _UserListPageState extends State<UserListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('User List'),
+        title: Text('Users and Products'),
       ),
-      body: FutureBuilder<List<User>>(
-        future: _futureUsers,
+      body: FutureBuilder<Map<User, List<Product>>>(
+        future: _futureUserProductMap,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (snapshot.hasData) {
-            final users = snapshot.data!;
-            return ListView.builder(
-              itemCount: users.length,
-              itemBuilder: (context, index) {
-                final user = users[index];
-                return ListTile(
+            final userProductMap = snapshot.data!;
+            return ListView(
+              children: userProductMap.entries.map((entry) {
+                final user = entry.key;
+                final products = entry.value;
+
+                return ExpansionTile(
+                  leading: Icon(Icons.person, color: Colors.blue),
                   title: Text(user.name),
                   subtitle: Text(user.email),
+                  children: products.map((product) {
+                    return ListTile(
+                      leading: Icon(Icons.shopping_cart, color: Colors.green),
+                      title: Text(product.title),
+                      subtitle: Text('\$${product.price.toStringAsFixed(2)}'),
+                    );
+                  }).toList(),
                 );
-              },
-            );
-          } else {
-            return Center(child: Text('No data available'));
-          }
-        },
-      ),
-    );
-  }
-}
-
-class ProductListPage extends StatefulWidget {
-  @override
-  _ProductListPageState createState() => _ProductListPageState();
-}
-
-class _ProductListPageState extends State<ProductListPage> {
-  late Future<List<Product>> _futureProducts;
-
-  @override
-  void initState() {
-    super.initState();
-    _futureProducts = fetchProducts();
-  }
-
-  Future<List<Product>> fetchProducts() async {
-    final response = await http.get(Uri.parse('https://fakestoreapi.com/products'));
-
-    if (response.statusCode == 200) {
-      final List<dynamic> jsonData = json.decode(response.body);
-      return jsonData.map((json) => Product.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load products');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Product List'),
-      ),
-      body: FutureBuilder<List<Product>>(
-        future: _futureProducts,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (snapshot.hasData) {
-            final products = snapshot.data!;
-            return ListView.builder(
-              itemCount: products.length,
-              itemBuilder: (context, index) {
-                final product = products[index];
-                return ListTile(
-                  title: Text(product.title),
-                  subtitle: Text('\$${product.price.toStringAsFixed(2)}'),
-                );
-              },
+              }).toList(),
             );
           } else {
             return Center(child: Text('No data available'));
